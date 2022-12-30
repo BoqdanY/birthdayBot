@@ -3,17 +3,8 @@
 const { Telegraf } = require('telegraf');
 const data = require('./data.json'); //file with your data
 
-const BOT_TOKEN = 'Your token';
+const BOT_TOKEN = 'Your Token';
 const bot = new Telegraf(BOT_TOKEN);
-
-bot.telegram.setMyCommands(
-    [
-      {
-        "command": "nextbirthday",
-        "description": "Наступне день народження",
-      },
-    ],
-);
 
 bot.start((ctx) => {
     ctx.reply('I am working...');
@@ -45,7 +36,7 @@ function nextBirthday(ctx) {
     }
     
     for (const person of persons) {
-        ctx.reply(`${person.name} буде святкувати свій День народження ${person.date}.`);
+        ctx.reply(`${person.name} буде святкувати свій День народження ${person.date.split('.')[0]}.${person.date.split('.')[1]}.`);
     }
 }
 
