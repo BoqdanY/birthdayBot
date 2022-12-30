@@ -1,37 +1,34 @@
 'use strict';
 
 const { Telegraf } = require('telegraf');
-const data = require('./data.json'); //file with data
+const data = require('./data.json'); //file with your data
+
 const BOT_TOKEN = 'Your token';
+const bot = new Telegraf(BOT_TOKEN);
 
-function minDate(arr) {
-    let curMonth = 13;
-    let curDay = 32;
-    let res;
+bot.telegram.setMyCommands(
+    [
+      {
+        "command": "nextbirthday",
+        "description": "Наступне день народження",
+      },
+    ],
+);
 
-    for (const elem of arr) {
-        const elemSplited = elem.date.split('.');
-        if (Number(elemSplited[1]) <= curMonth) {
-            if (Number(elemSplited[1]) === curMonth) {
-                if (Number(elemSplited[0]) === curDay) {
-                    res.push(elem);
-                    curMonth = Number(elemSplited[1]);
-                    curDay = Number(elemSplited[0]);
-                } else if (Number(elemSplited[0] < curDay)) {
-                    res = [elem];
-                    curMonth = Number(elemSplited[1]);
-                    curDay = Number(elemSplited[0]);
-                }
-            } else {
-                res = [elem];
-                curMonth = Number(elemSplited[1]);
-                curDay = Number(elemSplited[0]);
-            }
-        }
-    }
+bot.start((ctx) => {
+    ctx.reply('I am working...');
 
-    return res;
-}
+    const tomorrow = new Date;
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 5, 0, 0);
+    const time = Date.parse(tomorrow) - Date.now();
+
+    setTimeout(() => {
+        setInterval(() => todayBirthday(ctx), 86400000);
+    }, time);
+})
+
+bot.command('nextbirthday', ctx => nextBirthday(ctx));
 
 function nextBirthday(ctx) {
     const currentDate = new Date();
@@ -46,39 +43,58 @@ function nextBirthday(ctx) {
     } else {
         persons = minDate(data);
     }
+    
     for (const person of persons) {
         ctx.reply(`${person.name} буде святкувати свій День народження ${person.date}.`);
     }
 }
 
+function minDate(arr) {
+    let curMonth = 13;
+    let curDay = 32;
+    let res;
+
+    for (const elem of arr) {
+        const elemSplited = elem.date.split('.');
+        const elemDay = Number(elemSplited[0]);
+        const elemMonth = Number(elemSplited[1]);
+        
+        if (elemMonth <= curMonth) {
+            if (elemMonth === curMonth) {
+                if (elemDay === curDay) {
+                    res.push(elem);
+                    curMonth = elemMonth;
+                    curDay = elemDay;
+                } else if (elemDay < curDay) {
+                    res = [elem];
+                    curMonth = elemMonth;
+                    curDay = elemDay;
+                }
+            } else {
+                res = [elem];
+                curMonth = elemMonth;
+                curDay = elemDay;
+            }
+        }
+    }
+
+    return res;
+}
+
 function todayBirthday(ctx) {
     const currentDate = new Date();
+    const curerentMonth = currentDate.getMonth() + 1;
+    const currentDay = currentDate.getDate();
+
     for (const elem of data) {
         const elemSplited = elem.date.split('.');
-        if (currentDate.getMonth() === Number(elemSplited[1]) && currentDate.getDate() === Number(elemSplited[0])) ctx.reply(`${elem.name} святкує сьогодні день народження. Привітаймо @${elem.tag}😘`);
+        const elemDay = Number(elemSplited[0]);
+        const elemMonth = Number(elemSplited[1]);
+
+        if (curerentMonth === elemMonth && currentDay === elemDay) {
+            ctx.reply(`${elem.name} святкує сьогодні день народження. Привітаймо @${elem.tag}😘`);
+        }
     }
 }
 
-const bot = new Telegraf(BOT_TOKEN);
-bot.telegram.setMyCommands(
-    [
-      {
-        "command": "nextbirthday",
-        "description": "Наступне день народження",
-      },
-    ],
-  );
-
-bot.start((ctx) => {
-    ctx.reply('I am working...');
-    const now = Date.now();
-    const tomorrow = new Date;
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 5, 0, 0);
-    const time = Date.parse(tomorrow) - now;
-    setTimeout(() => {
-        setInterval(() => todayBirthday(ctx), 86400000);
-    }, time);
-})
-bot.command('nextbirthday', ctx => nextBirthday(ctx));
 bot.launch();
